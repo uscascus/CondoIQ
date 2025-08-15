@@ -1,5 +1,5 @@
 import pymysql
-from sqlalchemy import create_engine, Column, Integer, String, Text, Date, ForeignKey, Table
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import datetime
@@ -8,7 +8,7 @@ import datetime
 usuario = 'root'
 senha = '12345678'
 host = 'localhost'
-banco = 'site_receitas'
+banco = 'condominio_comunidade'
 
 # Conecta ao MySQL para criar o banco, se necessário
 def criar_database_se_nao_existir():
@@ -23,10 +23,11 @@ def criar_database_se_nao_existir():
 # ORM - SQLAlchemy
 Base = declarative_base()
 
-receita_ingrediente = Table('receita_ingrediente', Base.metadata,
-    Column('id_receita', Integer, ForeignKey('receita.id')),
-    Column('id_ingrediente', Integer, ForeignKey('ingrediente.id')),
-    Column('quantidade', String(100))
+# Associação para participação em reuniões
+participacao_reuniao = Table('participacao_reuniao', Base.metadata,
+    Column('id_reuniao', Integer, ForeignKey('reuniao.id')),
+    Column('id_usuario', Integer, ForeignKey('usuario.id')),
+    Column('presente', Boolean, default=False)
 )
 
 class Usuario(Base):
@@ -35,49 +36,45 @@ class Usuario(Base):
     nome = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     senha = Column(String(255), nullable=False)
-    data_cadastro = Column(Date, default=datetime.date.today)
-    receitas = relationship('Receita', back_populates='autor')
-    avaliacoes = relationship('Avaliacao', back_populates='usuario')
-    favoritos = relationship('Favorito', back_populates='usuario')
+    tipo = Column(String(50))  # morador ou sindico
+    telefone = Column(String(20))
+    data_cadastro = Column(DateTime, default=datetime.datetime.now)
+    
+    despesas = relationship('Despesa', back_populates='responsavel')
+    mensagens_enviadas = relationship('Mensagem', back_populates='remetente')
+    reunioes = relationship('Reuniao', secondary=participacao_reuniao, back_populates='participantes')
 
-class Receita(Base):
-    __tablename__ = 'receita'
+class Despesa(Base):
+    __tablename__ = 'despesa'
+    id = Column(Integer, primary_key=True)
+    descricao = Column(String(200), nullable=False)
+    valor = Column(Integer, nullable=False)
+    data = Column(DateTime, default=datetime.datetime.now)
+    tipo = Column(String(50))
+    id_responsavel = Column(Integer, ForeignKey('usuario.id'))
+    
+    responsavel = relationship('Usuario', back_populates='despesas')
+
+class Reuniao(Base):
+    __tablename__ = 'reuniao'
     id = Column(Integer, primary_key=True)
     titulo = Column(String(200), nullable=False)
-    modo_preparo = Column(Text, nullable=False)
-    tempo_preparo = Column(Integer)
-    categoria = Column(String(100))
-    imagem_url = Column(String(255))
-    data_postagem = Column(Date, default=datetime.date.today)
-    id_usuario = Column(Integer, ForeignKey('usuario.id'))
-    autor = relationship('Usuario', back_populates='receitas')
-    ingredientes = relationship('Ingrediente', secondary=receita_ingrediente, back_populates='receitas')
-    avaliacoes = relationship('Avaliacao', back_populates='receita')
+    data_hora = Column(DateTime, nullable=False)
+    local = Column(String(100))
+    descricao = Column(Text)
+    status = Column(String(50))  # agendada, realizada, cancelada
+    
+    participantes = relationship('Usuario', secondary=participacao_reuniao, back_populates='reunioes')
 
-class Ingrediente(Base):
-    __tablename__ = 'ingrediente'
+class Mensagem(Base):
+    __tablename__ = 'mensagem'
     id = Column(Integer, primary_key=True)
-    nome = Column(String(100), nullable=False)
-    receitas = relationship('Receita', secondary=receita_ingrediente, back_populates='ingredientes')
-
-class Avaliacao(Base):
-    __tablename__ = 'avaliacao'
-    id = Column(Integer, primary_key=True)
-    nota = Column(Integer, nullable=False)
-    comentario = Column(Text)
-    data_avaliacao = Column(Date, default=datetime.date.today)
-    id_usuario = Column(Integer, ForeignKey('usuario.id'))
-    id_receita = Column(Integer, ForeignKey('receita.id'))
-    usuario = relationship('Usuario', back_populates='avaliacoes')
-    receita = relationship('Receita', back_populates='avaliacoes')
-
-class Favorito(Base):
-    __tablename__ = 'favorito'
-    id = Column(Integer, primary_key=True)
-    id_usuario = Column(Integer, ForeignKey('usuario.id'))
-    id_receita = Column(Integer, ForeignKey('receita.id'))
-    usuario = relationship('Usuario', back_populates='favoritos')
-    receita = relationship('Receita')
+    conteudo = Column(Text, nullable=False)
+    data_envio = Column(DateTime, default=datetime.datetime.now)
+    id_remetente = Column(Integer, ForeignKey('usuario.id'))
+    id_destinatario = Column(Integer, ForeignKey('usuario.id'), nullable=True)  # NULL para mensagem geral
+    
+    remetente = relationship('Usuario', back_populates='mensagens_enviadas')
 
 def criar_tabelas():
     url = f"mysql+pymysql://{usuario}:{senha}@{host}/{banco}"
