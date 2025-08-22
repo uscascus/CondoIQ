@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar - Sabores do Mundo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <a href="{{ url_for('main.home') }}" class="logo-link">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo Sabores do Mundo" class="logo-img">
+            </a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="{{ url_for('main.home') }}">Home</a></li>
+                    <li><a href="#">Receitas</a></li>
+                    <li><a href="#">Sobre Nós</a></li>
+                    <li><a href="#">Contato</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="form-section">
+            <div class="container">
+                <h2>Registrar</h2>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="flash-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                <form method="POST" action="{{ url_for('main.register') }}">
+                    {% if request.args.get('step') != 'verify' %}
+                        <div class="form-group">
+                            <label for="nome">Nome de Usuário</label>
+                            <input type="text" id="nome" name="nome" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="senha">Senha</label>
+                            <input type="password" id="senha" name="senha" required>
+                        </div>
+                        <button type="submit" class="cta-button">Registrar</button>
+                    {% else %}
+                        <div class="form-group">
+                            <label for="codigo">Código de Verificação</label>
+                            <input type="text" id="codigo" name="codigo" required>
+                            <input type="hidden" name="step" value="verify">
+                        </div>
+                        <button type="submit" class="cta-button">Confirmar Código</button>
+                    {% endif %}
+                </form>
+                <p><a href="{{ url_for('main.login') }}">Voltar ao Login</a></p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>&copy; 2025 Sabores do Mundo. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+</body>
+</html>
