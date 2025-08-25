@@ -1,6 +1,6 @@
 import datetime
 import bcrypt
-from sqlalchemy import create_engine, Column, Integer, String, Date, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Date, ForeignKey, Table
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy_utils import database_exists, create_database
 
@@ -15,6 +15,13 @@ Session = sessionmaker(bind=engine)
 
 Base = declarative_base()
 
+# Tabela de associação para o relacionamento N:M entre Usuario e Reuniao
+reuniao_participantes = Table(
+    'reuniao_participantes', Base.metadata,
+    Column('usuario_id', Integer, ForeignKey('usuarios.id'), primary_key=True),
+    Column('reuniao_id', Integer, ForeignKey('reunioes.id'), primary_key=True)
+)
+
 class Usuario(Base):
     __tablename__ = "usuarios"
     id = Column(Integer, primary_key=True)
@@ -23,9 +30,10 @@ class Usuario(Base):
     senha = Column(String(255), nullable=False)
     tipo = Column(String(50), default="condomino")
     condominio_id = Column(Integer, ForeignKey("condominio.id"), nullable=True)
-    verification_code = Column(String(10), nullable=True)  # nova coluna
+    verification_code = Column(String(10), nullable=True)
 
     condominio = relationship("Condominio", back_populates="usuarios")
+    reunioes = relationship("Reuniao", secondary=reuniao_participantes, back_populates="participantes")
 
     # Flask-Login
     def is_authenticated(self): return True
@@ -43,8 +51,35 @@ class Condominio(Base):
     telefone = Column(String(20), nullable=True)
     email = Column(String(100), nullable=True)
     data_cadastro = Column(Date, default=datetime.date.today)
-    status = Column(String(50), default="pendente")  # começa como pendente
+    status = Column(String(50), default="pendente")
     usuarios = relationship("Usuario", back_populates="condominio")
+    despesas = relationship("Despesa", back_populates="condominio")
+    reunioes = relationship("Reuniao", back_populates="condominio")
+
+
+class Despesa(Base):
+    __tablename__ = "despesas"
+    id = Column(Integer, primary_key=True)
+    descricao = Column(String(255), nullable=False)
+    valor = Column(Integer, nullable=False)
+    data = Column(Date, nullable=False)
+    categoria = Column(String(50), nullable=False)
+    condominio_id = Column(Integer, ForeignKey("condominio.id"))
+
+    condominio = relationship("Condominio", back_populates="despesas")
+
+
+class Reuniao(Base):
+    __tablename__ = "reunioes"
+    id = Column(Integer, primary_key=True)
+    titulo = Column(String(150), nullable=False)
+    data = Column(Date, nullable=False)
+    local = Column(String(255), nullable=False)
+    condominio_id = Column(Integer, ForeignKey("condominio.id"))
+
+    condominio = relationship("Condominio", back_populates="reunioes")
+    participantes = relationship("Usuario", secondary=reuniao_participantes, back_populates="reunioes")
+
 
 def criar_database_se_nao_existir():
     if not database_exists(engine.url):
