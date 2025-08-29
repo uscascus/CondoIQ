@@ -1,9 +1,10 @@
 import datetime
 import bcrypt
-from sqlalchemy import create_engine, Column, Integer, String, Date, ForeignKey, Table
+from sqlalchemy import create_engine, Column, Integer, String, Date, ForeignKey, Table, Boolean
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy_utils import database_exists, create_database
 
+# Configuração do Banco de Dados
 usuario = 'root'
 senha = '12345678'
 host = 'localhost'
@@ -22,22 +23,26 @@ reuniao_participantes = Table(
     Column('reuniao_id', Integer, ForeignKey('reunioes.id'), primary_key=True)
 )
 
+# Constantes para a tipagem do usuário
+TIPO_SINDICO = 0
+TIPO_MORADOR = 1
+
 class Usuario(Base):
     __tablename__ = "usuarios"
     id = Column(Integer, primary_key=True)
     nome = Column(String(100), nullable=False)
     email = Column(String(120), unique=True, nullable=False)
     senha = Column(String(255), nullable=False)
-    tipo = Column(String(50), default="condomino")
+    tipo = Column(Integer, default=TIPO_MORADOR)
     condominio_id = Column(Integer, ForeignKey("condominio.id"), nullable=True)
-    verification_code = Column(String(10), nullable=True)
+    is_ativo = Column(Boolean, default=True, nullable=False)
 
     condominio = relationship("Condominio", back_populates="usuarios")
     reunioes = relationship("Reuniao", secondary=reuniao_participantes, back_populates="participantes")
 
-    # Flask-Login
+    # Métodos Flask-Login
     def is_authenticated(self): return True
-    def is_active(self): return True
+    def is_active(self): return self.is_ativo
     def is_anonymous(self): return False
     def get_id(self): return str(self.id)
 
@@ -87,3 +92,8 @@ def criar_database_se_nao_existir():
 
 def criar_tabelas():
     Base.metadata.create_all(engine)
+
+if __name__ == '__main__':
+    criar_database_se_nao_existir()
+    criar_tabelas()
+    print("Banco de dados e tabelas criados com sucesso!")
