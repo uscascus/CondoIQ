@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>CondoIQ - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+
+    <header>
+        <h1>Bem-vindo, {{ user.nome }}!</h1>
+        <p>Você está no condomínio **{{ condominio.nome }}**</p>
+        <a href="{{ url_for('logout') }}">Sair</a>
+    </header>
+
+    <main>
+        <section class="info-condominio">
+            <h2>Informações do Condomínio</h2>
+            <p>Endereço: {{ condominio.endereco }}</p>
+            <p>CNPJ: {{ condominio.cnpj }}</p>
+            <p>Email: {{ condominio.email }}</p>
+        </section>
+
+        <section class="anuncios">
+            <h2>Últimos Anúncios</h2>
+            <p>Ainda não há anúncios.</p>
+            </section>
+
+        <section class="acoes">
+            <h2>Ações Rápidas</h2>
+            <ul>
+                <li><a href="#">Gerenciar Despesas</a></li>
+                <li><a href="#">Agendar Reunião</a></li>
+                <li><a href="#">Ver Participantes</a></li>
+            </ul>
+        </section>
+    </main>
+
+</body>
+</html>
