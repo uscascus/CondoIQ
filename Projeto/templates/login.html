@@ -1,56 +1,25 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - CondoIQ</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Condomínio Aquarela</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
 </head>
-<body>
-    <header class="main-header">
-        <div class="container">
-            <a href="{{ url_for('home') }}" class="logo-link">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo CondoIQ" class="logo-img">
-            </a>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="{{ url_for('home') }}">Home</a></li>
-                    <li><a href="#">Anúncios</a></li>
-                    <li><a href="#">Contato</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-
-    <main>
-        <section class="login-section">
-            <div class="container">
-                <form method="POST" action="{{ url_for('login') }}" class="login-form">
-                    <div class="form-group">
-                        <label for="identificador">Email</label>
-                        <input type="text" id="identificador" name="identificador" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="senha">Senha</label>
-                        <input type="password" id="senha" name="senha" required>
-                        <a href="{{ url_for('forgot_password') }}" class="forgot-password">Esqueceu a senha?</a>
-                    </div>
-                    <button type="submit" class="login-button">Entrar</button>
-                    <div class="or-separator">ou</div>
-                    <button type="button" class="google-button" disabled>Continuar com Google</button>
-                    <p class="new-account">Novo por aqui? <a href="{{ url_for('register') }}">Crie uma conta</a></p>
-                    {% if current_user.is_authenticated %}
-                        <p class="logout"><a href="{{ url_for('logout') }}">Sair</a></p>
-                    {% endif %}
-                </form>
-            </div>
-        </section>
-    </main>
-
-    <footer class="main-footer">
-        <div class="container">
-            <p>&copy; 2025 CondoIQ. Todos os direitos reservados.</p>
-        </div>
-    </footer>
+<body class="auth-body">
+  <div class="auth-container">
+    <div class="auth-box">
+      <img src="{{ url_for('static', filename='imagens/logo_azul.png') }}" alt="Logo Aquarela" class="auth-logo">
+      <h2>Entrar</h2>
+      <form method="POST" action="{{ url_for('login') }}">
+        <input type="email" name="email" placeholder="E-mail" required>
+        <input type="password" name="password" placeholder="Senha" required>
+        <button type="submit" class="auth-btn">Login</button>
+      </form>
+      <p class="auth-text">
+        Não tem conta? <a href="{{ url_for('register') }}">Cadastre-se</a>
+      </p>
+    </div>
+  </div>
 </body>
 </html>

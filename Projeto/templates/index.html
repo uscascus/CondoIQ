@@ -1,41 +1,76 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CondoIQ - Gestão de Condomínios</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Condomínio Aquarela</title>
+  <link rel="icon" href="{{ url_for('static', filename='imagens/logo.png') }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <header class="main-header">
-        <div class="container">
-            <a href="{{ url_for('home') }}" class="logo-link">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo CondoIQ" class="logo-img">
-            </a>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="#">Anúncios</a></li>
-                    <li><a href="#">Contato</a></li>
-                    <li><a href="{{ url_for('login') }}" class="nav-button">Login</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+  <div class="container">
+    
+    <!-- Sidebar -->
+  <aside class="sidebar">
+  <a href="{{ url_for('home') }}" class="logo-link">
+    <img src="{{ url_for('static', filename='imagens/logo.png') }}" alt="Logo Aquarela" class="logo-img">
+  </a>
+  <nav>
+    <ul>
+      <li class="active"><a href="#">Home</a></li>
+      <li><a href="#">Finanças</a></li>
+      <li><a href="#">Agenda</a></li>
+      <li><a href="#">Manutenção</a></li>
+    </ul>
+  </nav>
+</aside>
 
-    <main>
-        <section class="hero-section">
-            <div class="container">
-                <h1>Sua Vida em Condomínio, Mais Simples</h1>
-                <p>Gerencie finanças, comunicados e reuniões do seu condomínio de forma fácil e eficiente.</p>
-                <a href="{{ url_for('register') }}" class="cta-button">Cadastre-se</a>
-            </div>
-        </section>
+
+    
+    <!-- Conteúdo principal -->
+    <main class="main-content">
+      
+      <!-- Cabeçalho -->
+      <header class="header">
+        <h1>Painel de controle</h1>
+        <div class="user-actions">
+          <span class="icon">🔔</span>
+          <a href="{{ url_for('register') }}" class="cta-button">Cadastre-se</a>
+          <a href="{{ url_for('login') }}" class="nav-button">Login</a>
+        </div>
+      </header>
+      
+      <!-- Cards principais -->
+      <section class="cards">
+        <div class="card">
+          <h3>Despesas deste mês</h3>
+          <p class="valor">R$ 2.000</p>
+          <small>Atualizado hoje</small>
+        </div>
+        <div class="card">
+          <h3>Reuniões</h3>
+          <p>15 de Maio, 18h</p>
+          <small>Ver agenda completa</small>
+        </div>
+        <div class="card">
+          <h3>Manutenções</h3>
+          <p>Vazamento na piscina</p>
+          <span class="status pendente">Pendente</span>
+        </div>
+      </section>
+      
+      <!-- Comunicados -->
+      <section class="comunicados">
+        <h2>Comunicados Recentes</h2>
+        <div class="comunicado">
+          <p><strong>Aviso:</strong> Limpeza da garagem dia 28/08.</p>
+        </div>
+        <div class="comunicado">
+          <p><strong>Reserva:</strong> Dona Maria reserva a churrasqueira para seu churrasco vegano no próximo domingo dia 21/08.</p>
+        </div>
+      </section>
+      
     </main>
-
-    <footer class="main-footer">
-        <div class="container">
-            <p>&copy; 2025 CondoIQ. Todos os direitos reservados.</p>
-        </div>
-    </footer>
+  </div>
 </body>
 </html>
