@@ -13,8 +13,8 @@
       <img src="{{ url_for('static', filename='imagens/logo_azul.png') }}" alt="Logo Aquarela" class="auth-logo">
       <h2>Entrar</h2>
       <form method="POST" action="{{ url_for('login') }}">
-        <input type="email" name="email" placeholder="E-mail" required>
-        <input type="password" name="password" placeholder="Senha" required>
+        <input type="email" name="identificador" placeholder="E-mail" required>
+        <input type="password" name="senha" placeholder="Senha" required>
         <button type="submit" class="auth-btn">Login</button>
       </form>
       <p class="auth-text">
@@ -24,4 +24,3 @@
   </div>
 </body>
 </html>
-

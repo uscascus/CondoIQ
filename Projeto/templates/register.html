@@ -10,13 +10,12 @@
 <body class="auth-body">
   <div class="auth-container">
     <div class="auth-box">
-      <img src="{{ url_for('static', filename='imagens/logo_azul.png') }}" alt="Logo Aquarela" class="auth-logo">
+      <img src="{{ url_for('static', filename='imagens/logo_azul.png') }}" alt="Logo Aquareela" class="auth-logo">
       <h2>Cadastro</h2>
       <form method="POST" action="{{ url_for('register') }}">
         <input type="text" name="nome" placeholder="Nome completo" required>
         <input type="email" name="email" placeholder="E-mail" required>
-        <input type="password" name="password" placeholder="Senha" required>
-        <input type="password" name="confirm_password" placeholder="Confirmar senha" required>
+        <input type="password" name="senha" placeholder="Senha" required>
         <button type="submit" class="auth-btn">Cadastrar</button>
       </form>
       <p class="auth-text">
@@ -26,4 +25,3 @@
   </div>
 </body>
 </html>
-

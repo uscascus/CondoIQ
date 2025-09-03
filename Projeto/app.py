@@ -148,6 +148,8 @@ def register():
                 if session_db.query(Usuario).filter_by(email=email).first():
                     flash('Email já cadastrado!', 'error')
                     return redirect(url_for('register'))
+                
+                # --- Lógica de envio de e-mail e salvamento de sessão ---
                 verification_code = secrets.token_hex(3)
                 session['verification_code'] = verification_code
                 session['pending_registration'] = {'nome': nome, 'email': email, 'senha': senha}
@@ -159,9 +161,12 @@ def register():
                 flash('Um código de verificação foi enviado para o seu email. Insira-o para confirmar.', 'success')
                 return redirect(url_for('register', step='verify'))
             else:
+                # --- Lógica de verificação do código ---
                 if not codigo or codigo != session.get('verification_code'):
                     flash('Código de verificação inválido!', 'error')
                     return redirect(url_for('register', step='verify'))
+                
+                # --- Lógica de registro final ---
                 hashed_senha = bcrypt.hashpw(session['pending_registration']['senha'].encode('utf-8'), bcrypt.gensalt())
                 condominio_existente = session_db.query(Condominio).first()
                 if not condominio_existente:
@@ -198,6 +203,10 @@ def register():
             return redirect(url_for('register', step=step))
         finally:
             session_db.close()
+    
+    # --- AQUI ESTÁ A MUDANÇA IMPORTANTE ---
+    if step == 'verify':
+        return render_template('verify.html')
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
