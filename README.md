@@ -38,6 +38,5 @@ python app.py
 ### Sair do ambiente virtual
 deactivate
 
-### Baixar as bibliotecas
+### Gerar o arquivo requirements 
 pip freeze > requirements.txt
-
