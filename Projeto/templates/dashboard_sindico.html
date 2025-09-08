@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>CondoIQ - Dashboard Síndico</title>
+    <link rel="icon" href="{{ url_for('static', filename='imagens/logo.png') }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <a href="{{ url_for('dashboard') }}" class="logo-link">
+                <img src="{{ url_for('static', filename='imagens/logo.png') }}" alt="Logo Aquarela" class="logo-img">
+            </a>
+            <nav>
+                <ul>
+                    <li class="active"><a href="#">Home</a></li>
+                    <li><a href="#">Finanças</a></li>
+                    <li><a href="#">Agenda</a></li>
+                    <li><a href="#">Manutenção</a></li>
+                    <li><a href="{{ url_for('gerenciar_moradores') }}">Moradores</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1>Painel do Síndico</h1>
+                <div class="user-actions">
+                    <p>Bem-vindo, {{ user.nome }}!</p>
+                    <a href="{{ url_for('logout') }}">Sair</a>
+                </div>
+            </header>
+            
+            <section class="cards">
+                <div class="card">
+                    <h3>Moradores Cadastrados</h3>
+                    <p class="valor">{{ moradores }}</p>
+                    <small>Total de usuários no condomínio</small>
+                </div>
+                <div class="card">
+                    <h3>Reuniões Agendadas</h3>
+                    {% if reunioes %}
+                        <p>{{ reunioes | length }} reunião(ões)</p>
+                        <small>Última: {{ reunioes[0].data.strftime('%d/%m/%Y') }}</small>
+                    {% else %}
+                        <p>Nenhuma reunião</p>
+                    {% endif %}
+                </div>
+                <div class="card">
+                    <h3>Despesas Registradas</h3>
+                    {% if despesas %}
+                        <p>{{ despesas | length }} despesa(s)</p>
+                        <small>Última: {{ despesas[0].data.strftime('%d/%m/%Y') }}</small>
+                    {% else %}
+                        <p>Nenhuma despesa</p>
+                    {% endif %}
+                </div>
+            </section>
+            
+            <section class="info-condominio">
+                <h2>Informações do Condomínio</h2>
+                <p>Nome: {{ condominio.nome }}</p>
+                <p>Endereço: {{ condominio.endereco }}</p>
+                <p>CNPJ: {{ condominio.cnpj }}</p>
+                <p>Email: {{ condominio.email }}</p>
+            </section>
+            
+            <section class="comunicados">
+                <h2>Comunicados Recentes</h2>
+                {% if reunioes %}
+                    {% for reuniao in reunioes %}
+                    <div class="comunicado">
+                        <p><strong>Reunião:</strong> {{ reuniao.titulo }}</p>
+                        <small>Data: {{ reuniao.data.strftime('%d/%m/%Y') }}</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>Ainda não há anúncios.</p>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

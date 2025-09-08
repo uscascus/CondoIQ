@@ -299,17 +299,40 @@ def dashboard():
     session_db = Session()
     try:
         usuario_ativo = session_db.query(Usuario).get(current_user.id)
-        if usuario_ativo and usuario_ativo.condominio:
-            condominio = usuario_ativo.condominio
-            return render_template('dashboard.html', condominio=condominio, user=usuario_ativo, TIPO_SINDICO=TIPO_SINDICO)
-        else:
+        if not usuario_ativo or not usuario_ativo.condominio:
             return render_template('no_condominio.html', user=usuario_ativo)
+
+        condominio = usuario_ativo.condominio
+        
+        # Lógica de diferenciação de tela
+        if usuario_ativo.tipo == TIPO_SINDICO:
+            # Dados específicos para a tela do síndico
+            despesas_condominio = session_db.query(Despesa).filter_by(condominio_id=condominio.id).all()
+            reunioes_condominio = session_db.query(Reuniao).filter_by(condominio_id=condominio.id).all()
+            moradores_condominio = session_db.query(Usuario).filter(Usuario.condominio_id == condominio.id).count()
+            
+            return render_template('dashboard_sindico.html', 
+                                   condominio=condominio, 
+                                   user=usuario_ativo,
+                                   despesas=despesas_condominio,
+                                   reunioes=reunioes_condominio,
+                                   moradores=moradores_condominio)
+        else:
+            # Dados específicos para a tela do morador
+            reunioes_morador = usuario_ativo.reunioes
+            
+            return render_template('dashboard_morador.html', 
+                                   condominio=condominio, 
+                                   user=usuario_ativo,
+                                   reunioes=reunioes_morador)
+            
     except Exception as e:
         flash(f'Ocorreu um erro: {e}', 'error')
         return redirect(url_for('home'))
     finally:
         session_db.close()
 
+        
 @app.route('/gerenciar_moradores')
 @login_required
 def gerenciar_moradores():
@@ -330,22 +353,7 @@ def gerenciar_moradores():
     finally:
         session_db.close()
         
-# --- Rotas para teste de sessão (Remova após o teste) ---
-@app.route('/set_test_session')
-def set_test_session():
-    session['teste'] = 'sessao_funcionando'
-    flash('Um valor foi salvo na sua sessão!', 'success')
-    return redirect(url_for('home'))
 
-@app.route('/get_test_session')
-def get_test_session():
-    valor = session.get('teste')
-    if valor:
-        flash(f'O valor na sessão é: {valor}', 'success')
-    else:
-        flash('Não foi possível encontrar o valor na sessão.', 'error')
-    return redirect(url_for('home'))
-# --------------------------------------------------------
 
 if __name__ == '__main__':
     criar_database_se_nao_existir()
