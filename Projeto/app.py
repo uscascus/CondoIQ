@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mail import Mail, Message
 from sqlalchemy import create_engine, or_
@@ -10,7 +10,9 @@ import secrets
 import datetime
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, Table, Boolean
 
+# ============================================
 # Configurações do Banco de Dados e Modelos
+# ============================================
 usuario = 'root'
 senha = '12345678'
 host = 'localhost'
@@ -28,9 +30,12 @@ reuniao_participantes = Table(
     Column('reuniao_id', Integer, ForeignKey('reunioes.id'), primary_key=True)
 )
 
+# ============================================
 # Constantes para a tipagem do usuário
+# ============================================
 TIPO_SINDICO = 0
-TIPO_MORADOR = 1
+TIPO_PENDENTE = 1
+TIPO_MORADOR = 2
 
 class Usuario(Base):
     __tablename__ = "usuarios"
@@ -38,7 +43,7 @@ class Usuario(Base):
     nome = Column(String(100), nullable=False)
     email = Column(String(120), unique=True, nullable=False)
     senha = Column(String(255), nullable=False)
-    tipo = Column(Integer, default=TIPO_MORADOR)
+    tipo = Column(Integer, default=TIPO_PENDENTE)
     condominio_id = Column(Integer, ForeignKey("condominio.id"), nullable=True)
     verification_code = Column(String(10), nullable=True)
     is_ativo = Column(Boolean, default=True, nullable=False)
@@ -46,6 +51,7 @@ class Usuario(Base):
     condominio = relationship("Condominio", back_populates="usuarios")
     reunioes = relationship("Reuniao", secondary=reuniao_participantes, back_populates="participantes")
 
+    # Métodos Flask-Login
     def is_authenticated(self): return True
     def is_active(self): return self.is_ativo
     def is_anonymous(self): return False
@@ -95,7 +101,7 @@ def criar_tabelas():
 # -------------------------------------------------------------
 # Configuração do Flask
 app = Flask(__name__)
-app.secret_key = 'sua_chave_secreta_aqui'
+app.secret_key = 'troque_esta_chave_por_uma_muito_secreta'
 
 # Flask-Login
 login_manager = LoginManager()
@@ -110,14 +116,20 @@ def load_user(user_id):
     finally:
         session_db.close()
 
-# Configurações de email
+# Configurações de email (ajuste para variáveis de ambiente em produção)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'tueursprimecs2@gmail.com'
 app.config['MAIL_PASSWORD'] = 'sgoz cask wxad onsb'
-app.config['MAIL_DEFAULT_SENDER'] = 'seuapp@gmail.com'
+app.config['MAIL_DEFAULT_SENDER'] = 'no-reply@condoiq.com'
 mail = Mail(app)
+
+# -------------------------------------------------------------
+# Funções auxiliares
+def requer_sindico(usuario_ativo):
+    if not usuario_ativo or usuario_ativo.tipo != TIPO_SINDICO:
+        abort(403)
 
 # -------------------------------------------------------------
 # Rotas
@@ -149,7 +161,7 @@ def register():
                     flash('Email já cadastrado!', 'error')
                     return redirect(url_for('register'))
                 
-                # --- Lógica de envio de e-mail e salvamento de sessão ---
+                # Envio do email com código de verificação
                 verification_code = secrets.token_hex(3)
                 session['verification_code'] = verification_code
                 session['pending_registration'] = {'nome': nome, 'email': email, 'senha': senha}
@@ -161,15 +173,16 @@ def register():
                 flash('Um código de verificação foi enviado para o seu email. Insira-o para confirmar.', 'success')
                 return redirect(url_for('register', step='verify'))
             else:
-                # --- Lógica de verificação do código ---
+                # Verifica o código
                 if not codigo or codigo != session.get('verification_code'):
                     flash('Código de verificação inválido!', 'error')
                     return redirect(url_for('register', step='verify'))
                 
-                # --- Lógica de registro final ---
+                # Registro final
                 hashed_senha = bcrypt.hashpw(session['pending_registration']['senha'].encode('utf-8'), bcrypt.gensalt())
                 condominio_existente = session_db.query(Condominio).first()
                 if not condominio_existente:
+                    # Primeiro usuário vira síndico e cria condominio
                     novo_usuario = Usuario(
                         nome=session['pending_registration']['nome'],
                         email=session['pending_registration']['email'],
@@ -184,18 +197,19 @@ def register():
                     session_db.add(condominio_inicial)
                     novo_usuario.condominio = condominio_inicial
                 else:
+                    # Demais usuários entram como PENDENTE
                     novo_usuario = Usuario(
                         nome=session['pending_registration']['nome'],
                         email=session['pending_registration']['email'],
                         senha=hashed_senha.decode('utf-8'),
-                        tipo=TIPO_MORADOR
+                        tipo=TIPO_PENDENTE
                     )
                     novo_usuario.condominio = condominio_existente
                 session_db.add(novo_usuario)
                 session_db.commit()
                 del session['verification_code']
                 del session['pending_registration']
-                flash('Registro concluído com sucesso! Faça login.', 'success')
+                flash('Registro concluído! Aguarde aprovação do síndico.', 'success')
                 return redirect(url_for('login'))
         except Exception as e:
             session_db.rollback()
@@ -204,7 +218,6 @@ def register():
         finally:
             session_db.close()
     
-    # --- AQUI ESTÁ A MUDANÇA IMPORTANTE ---
     if step == 'verify':
         return render_template('verify.html')
     return render_template('register.html')
@@ -217,16 +230,37 @@ def login():
         session_db = Session()
         try:
             usuario = session_db.query(Usuario).filter_by(email=identificador).first()
-            if usuario and bcrypt.checkpw(senha.encode('utf-8'), usuario.senha.encode('utf-8')) and usuario.is_ativo:
-                login_user(usuario)
-                flash('Login realizado com sucesso!', 'success')
-                return redirect(url_for('dashboard'))
-            else:
-                flash('Credenciais inválidas ou conta desativada!', 'error')
+
+            # Verifica credenciais básicas
+            if not usuario or not bcrypt.checkpw(senha.encode('utf-8'), usuario.senha.encode('utf-8')):
+                flash('Credenciais inválidas!', 'error')
                 return redirect(url_for('login'))
+
+            # Verifica se a conta está ativa
+            if not usuario.is_ativo:
+                flash('Sua conta está desativada. Contate o síndico.', 'error')
+                return redirect(url_for('login'))
+
+            # Se o cadastro está pendente de aprovação do síndico:
+            if usuario.tipo == TIPO_PENDENTE:
+                # Opção A: usar flash + redirect pra reapresentar o login
+                flash('Seu cadastro foi realizado, mas o síndico precisa aprovar antes de você acessar o sistema.', 'warning')
+                return redirect(url_for('login'))
+
+                # Opção B (alternativa): renderizar com mensagem inline
+                # return render_template('login.html', msg='Seu cadastro foi realizado, mas o síndico precisa aprovar antes de você acessar o sistema.')
+
+            # Caso OK: efetua login
+            login_user(usuario)
+            flash('Login realizado com sucesso!', 'success')
+            return redirect(url_for('dashboard'))
+
         finally:
             session_db.close()
+
+    # GET
     return render_template('login.html')
+
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
@@ -304,13 +338,10 @@ def dashboard():
 
         condominio = usuario_ativo.condominio
         
-        # Lógica de diferenciação de tela
         if usuario_ativo.tipo == TIPO_SINDICO:
-            # Dados específicos para a tela do síndico
             despesas_condominio = session_db.query(Despesa).filter_by(condominio_id=condominio.id).all()
             reunioes_condominio = session_db.query(Reuniao).filter_by(condominio_id=condominio.id).all()
             moradores_condominio = session_db.query(Usuario).filter(Usuario.condominio_id == condominio.id).count()
-            
             return render_template('dashboard_sindico.html', 
                                    condominio=condominio, 
                                    user=usuario_ativo,
@@ -318,43 +349,104 @@ def dashboard():
                                    reunioes=reunioes_condominio,
                                    moradores=moradores_condominio)
         else:
-            # Dados específicos para a tela do morador
             reunioes_morador = usuario_ativo.reunioes
-            
             return render_template('dashboard_morador.html', 
                                    condominio=condominio, 
                                    user=usuario_ativo,
                                    reunioes=reunioes_morador)
-            
     except Exception as e:
         flash(f'Ocorreu um erro: {e}', 'error')
         return redirect(url_for('home'))
     finally:
         session_db.close()
 
-        
-@app.route('/gerenciar_moradores')
+# ===========================
+# NOVO: Gerenciar moradores (pendentes)
+# ===========================
+@app.route('/moradores/pendentes')
 @login_required
-def gerenciar_moradores():
+def moradores_pendentes():
     session_db = Session()
     try:
         usuario_ativo = session_db.query(Usuario).get(current_user.id)
-        if usuario_ativo.tipo != TIPO_SINDICO:
-            flash("Você não tem permissão para acessar esta página.", "error")
-            return redirect(url_for('dashboard'))
-        moradores = session_db.query(Usuario).filter(
+        requer_sindico(usuario_ativo)
+
+        pendentes = session_db.query(Usuario).filter(
             Usuario.condominio_id == usuario_ativo.condominio_id,
-            Usuario.id != usuario_ativo.id
+            Usuario.tipo == TIPO_PENDENTE
         ).all()
-        return render_template('gerenciar_moradores.html', moradores=moradores, user=usuario_ativo)
+
+        return render_template('gerenciar_moradores.html',
+                               user=usuario_ativo,
+                               pendentes=pendentes)
     except Exception as e:
         flash(f'Ocorreu um erro: {e}', 'error')
-        return redirect(url_for('home'))
+        return redirect(url_for('dashboard'))
     finally:
         session_db.close()
-        
 
+@app.route('/moradores/<int:usuario_id>/aprovar', methods=['POST'])
+@login_required
+def aprovar_morador(usuario_id):
+    session_db = Session()
+    try:
+        usuario_ativo = session_db.query(Usuario).get(current_user.id)
+        requer_sindico(usuario_ativo)
 
+        morador = session_db.query(Usuario).get(usuario_id)
+        if not morador or morador.condominio_id != usuario_ativo.condominio_id:
+            flash('Morador não encontrado.', 'error')
+            return redirect(url_for('moradores_pendentes'))
+
+        if morador.tipo != TIPO_PENDENTE:
+            flash('Este usuário já foi processado.', 'warning')
+            return redirect(url_for('moradores_pendentes'))
+
+        morador.tipo = TIPO_MORADOR
+        morador.is_ativo = True
+        session_db.commit()
+        flash('Morador aprovado com sucesso!', 'success')
+        return redirect(url_for('moradores_pendentes'))
+    except Exception as e:
+        session_db.rollback()
+        flash(f'Erro ao aprovar: {e}', 'error')
+        return redirect(url_for('moradores_pendentes'))
+    finally:
+        session_db.close()
+
+@app.route('/moradores/<int:usuario_id>/negar', methods=['POST'])
+@login_required
+def negar_morador(usuario_id):
+    session_db = Session()
+    try:
+        usuario_ativo = session_db.query(Usuario).get(current_user.id)
+        requer_sindico(usuario_ativo)
+
+        morador = session_db.query(Usuario).get(usuario_id)
+        if not morador or morador.condominio_id != usuario_ativo.condominio_id:
+            flash('Morador não encontrado.', 'error')
+            return redirect(url_for('moradores_pendentes'))
+
+        if morador.tipo != TIPO_PENDENTE:
+            flash('Este usuário já foi processado.', 'warning')
+            return redirect(url_for('moradores_pendentes'))
+
+        # Opção A: desativar a conta
+        morador.is_ativo = False
+        # Opção B: excluir (se preferir)
+        # session_db.delete(morador)
+
+        session_db.commit()
+        flash('Registro negado com sucesso.', 'success')
+        return redirect(url_for('moradores_pendentes'))
+    except Exception as e:
+        session_db.rollback()
+        flash(f'Erro ao negar: {e}', 'error')
+        return redirect(url_for('moradores_pendentes'))
+    finally:
+        session_db.close()
+
+# -------------------------------------------------------------
 if __name__ == '__main__':
     criar_database_se_nao_existir()
     criar_tabelas()

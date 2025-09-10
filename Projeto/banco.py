@@ -13,19 +13,18 @@ url = f"mysql+pymysql://{usuario}:{senha}@{host}/{banco}?charset=utf8mb4"
 
 engine = create_engine(url, echo=True)
 Session = sessionmaker(bind=engine)
-
 Base = declarative_base()
 
-# Tabela de associação para o relacionamento N:M entre Usuario e Reuniao
 reuniao_participantes = Table(
     'reuniao_participantes', Base.metadata,
     Column('usuario_id', Integer, ForeignKey('usuarios.id'), primary_key=True),
     Column('reuniao_id', Integer, ForeignKey('reunioes.id'), primary_key=True)
 )
 
-# Constantes para a tipagem do usuário
+# Tipos atualizados
 TIPO_SINDICO = 0
-TIPO_MORADOR = 1
+TIPO_PENDENTE = 1
+TIPO_MORADOR = 2
 
 class Usuario(Base):
     __tablename__ = "usuarios"
@@ -33,19 +32,17 @@ class Usuario(Base):
     nome = Column(String(100), nullable=False)
     email = Column(String(120), unique=True, nullable=False)
     senha = Column(String(255), nullable=False)
-    tipo = Column(Integer, default=TIPO_MORADOR)
+    tipo = Column(Integer, default=TIPO_PENDENTE)
     condominio_id = Column(Integer, ForeignKey("condominio.id"), nullable=True)
     is_ativo = Column(Boolean, default=True, nullable=False)
 
     condominio = relationship("Condominio", back_populates="usuarios")
     reunioes = relationship("Reuniao", secondary=reuniao_participantes, back_populates="participantes")
 
-    # Métodos Flask-Login
     def is_authenticated(self): return True
     def is_active(self): return self.is_ativo
     def is_anonymous(self): return False
     def get_id(self): return str(self.id)
-
 
 class Condominio(Base):
     __tablename__ = "condominio"
@@ -61,7 +58,6 @@ class Condominio(Base):
     despesas = relationship("Despesa", back_populates="condominio")
     reunioes = relationship("Reuniao", back_populates="condominio")
 
-
 class Despesa(Base):
     __tablename__ = "despesas"
     id = Column(Integer, primary_key=True)
@@ -70,9 +66,7 @@ class Despesa(Base):
     data = Column(Date, nullable=False)
     categoria = Column(String(50), nullable=False)
     condominio_id = Column(Integer, ForeignKey("condominio.id"))
-
     condominio = relationship("Condominio", back_populates="despesas")
-
 
 class Reuniao(Base):
     __tablename__ = "reunioes"
@@ -81,10 +75,8 @@ class Reuniao(Base):
     data = Column(Date, nullable=False)
     local = Column(String(255), nullable=False)
     condominio_id = Column(Integer, ForeignKey("condominio.id"))
-
     condominio = relationship("Condominio", back_populates="reunioes")
     participantes = relationship("Usuario", secondary=reuniao_participantes, back_populates="reunioes")
-
 
 def criar_database_se_nao_existir():
     if not database_exists(engine.url):
