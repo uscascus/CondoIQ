@@ -6,14 +6,14 @@
 
 {% block content %}
     <style>
-        /* Estilos específicos para a página de comunicados */
+        /* Estilos específicos para a página de comunicados com maior especificidade */
         .form-container {
             max-width: 800px;
-            margin-bottom: 30px;
+            margin: 0 auto 30px auto; /* Centraliza o formulário */
             padding: 25px;
-            background-color: #fff;
+            background-color: #e6f0fa; /* Light grayish-blue to match base palette */
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
         }
         .form-group {
             margin-bottom: 20px;
@@ -22,14 +22,15 @@
             display: block;
             margin-bottom: 8px;
             font-weight: bold;
-            color: #333;
+            color: #1e3a8a; /* Dark blue from sidebar */
         }
         .form-group input[type="text"],
         .form-group textarea {
             width: 100%;
             padding: 12px;
-            border: 1px solid #ccc;
+            border: 1px solid #a0aec0; /* Softer gray border */
             border-radius: 6px;
+            background-color: #f7fafc; /* Very light gray to reduce starkness */
         }
         .form-group textarea {
             min-height: 150px;
@@ -37,7 +38,7 @@
         }
         .btn-submit {
             padding: 12px 25px;
-            background-color: #4f46e5;
+            background-color: #2563eb; /* Matches base cta-button */
             color: white;
             border: none;
             border-radius: 6px;
@@ -46,16 +47,17 @@
             font-weight: bold;
         }
         .btn-submit:hover {
-            background-color: #4338ca;
+            background-color: #1e40af; /* Matches cta-button hover */
         }
         .comunicado-lista {
             max-width: 800px;
+            margin: 0 auto; /* Centraliza a lista também */
         }
         .comunicado-item {
-            background-color: #fff;
+            background-color: #f0f4f8; /* Light gray-blue, replacing white comunicado */
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
             margin-bottom: 15px;
             display: flex;
             flex-direction: column;
@@ -63,16 +65,16 @@
         }
         .comunicado-item h3 {
             margin-top: 0;
-            color: #1f2937;
+            color: #1e3a8a; /* Dark blue for titles */
         }
         .comunicado-item p {
             font-size: 14px;
-            color: #4b5563;
+            color: #4a5568; /* Slate gray for content */
         }
         .comunicado-item small {
             display: block;
             margin-top: 10px;
-            color: #9ca3af;
+            color: #718096; /* Muted gray for metadata */
         }
         .comunicado-actions {
             display: flex;
@@ -91,28 +93,41 @@
             text-align: center;
         }
         .btn-edit {
-            background-color: #3b82f6;
+            background-color: #10b981; /* Green from btn-concluir */
         }
         .btn-edit:hover {
-            background-color: #2563eb;
+            background-color: #059669; /* Darker green on hover */
         }
         .btn-delete {
-            background-color: #ef4444;
+            background-color: #c53030; /* Muted red for delete */
         }
         .btn-delete:hover {
-            background-color: #dc2626;
+            background-color: #9b2c2c; /* Darker red on hover */
+        }
+        .flash-container {
+            max-width: 800px;
+            margin: 0 auto 20px auto; /* Centraliza as flash messages */
+        }
+        .flash {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .flash.success {
+            background-color: #c6f6d5; /* Light green for success */
+            color: #059669;
+        }
+        .flash.error {
+            background-color: #fed7d7; /* Light red for error */
+            color: #9b2c2c;
+        }
+        .flash.info {
+            background-color: #bee3f8; /* Light blue for info */
+            color: #1e40af;
         }
     </style>
     
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-container">
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+
 
     <div class="form-container">
         <h2>Novo Comunicado</h2>

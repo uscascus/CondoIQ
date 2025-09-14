@@ -10,28 +10,22 @@
             </div>
         </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-container">
-                    {% for category, message in messages %}
-                        <div class="flash {{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
         <section class="info-condominio">
             <h2>Informações do Condomínio</h2>
-            <div class="card">
-                <div class="info-item">
-                    <strong>Nome:</strong> <span>{{ condominio.nome }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Endereço:</strong> <span>{{ condominio.endereco }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Email:</strong> <span>{{ condominio.email if condominio.email else '—' }}</span>
-                </div>
+            <div class="info-item">
+                <strong>Nome:</strong> <span>{{ condominio.nome }}</span>
+            </div>
+            <div class="info-item">
+                <strong>Endereço:</strong> <span>{{ condominio.endereco }}</span>
+            </div>
+            <div class="info-item">
+                <strong>CNPJ:</strong> <span>{{ condominio.cnpj if condominio.cnpj else '—' }}</span>
+            </div>
+            <div class="info-item">
+                <strong>Email:</strong> <span>{{ condominio.email if condominio.email else '—' }}</span>
+            </div>
+            <div class="info-item">
+                <strong>Telefone:</strong> <span>{{ condominio.telefone if condominio.telefone else '—' }}</span>
             </div>
         </section>
 
@@ -42,10 +36,9 @@
                     <div class="comunicado card">
                         <p><strong>{{ comunicado.titulo }}</strong></p>
                         <p>{{ comunicado.conteudo }}</p>
-                        <small>Publicado em: {{ comunicado.data_postagem.strftime('%d/%m/%Y') }}</small>
+                        <small>Publicado por {{ comunicado.usuario.nome }} em {{ comunicado.data_postagem.strftime('%d/%m/%Y') }}</small>
                     </div>
                 {% endfor %}
-                <a href="{{ url_for('comunicados') }}" class="btn btn-primary">Ver Todos os Comunicados</a>
             {% else %}
                 <div class="card empty">
                     <div style="font-size:18px; font-weight:700; margin-bottom:6px;">Nenhum comunicado</div>
@@ -231,12 +224,12 @@
         }
         .btn-primary {
             background: var(--primary);
-            color: #0800ff;
+            color: #ffffff;
             border: none;
             text-align: center;
         }
         .btn-primary:hover {
-            background: #ffffff;
+            background: #392fbb;
         }
         .btn-ghost {
             background: #0800ff;

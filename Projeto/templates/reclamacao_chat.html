@@ -97,12 +97,19 @@
             {% endfor %}
         </div>
         
+        {% if reclamacao.status != 'Concluída' %}
         <form method="post" action="{{ url_for('reclamacao_chat', reclamacao_id=reclamacao.id) }}" class="chat-input">
             <textarea name="conteudo" placeholder="Digite sua mensagem..." required></textarea>
             <button type="submit">Enviar</button>
+            <a href="{{ url_for('dashboard') }}" class="back-link">← Voltar ao Dashboard</a>
         </form>
+        {% else %}
+        <div class="chat-closed-message">
+            <p>Esta reclamação foi concluída e não aceita novas mensagens.</p>
+        </div>
+        {% endif %}
 
-        <a href="{{ url_for('dashboard') }}" class="back-link">← Voltar ao Dashboard</a>
+        
     </div>
 </body>
 </html>

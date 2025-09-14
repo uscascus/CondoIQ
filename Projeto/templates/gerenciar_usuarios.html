@@ -14,8 +14,6 @@
             background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe;
             padding:6px 10px; border-radius:999px; font-weight:600; font-size:12px;
         }
-
-        /* ====== Toolbar e Card ====== */
         .toolbar{
             display:flex; gap:12px; align-items:center; margin: 18px 0 14px;
             flex-wrap:wrap;
@@ -38,12 +36,36 @@
             transition:.15s transform ease, .15s filter ease; box-shadow:var(--shadow);
             text-decoration: none;
             color: var(--text);
+            text-align: center;
         }
         .btn:hover{ transform:translateY(-1px); filter:brightness(0.98); }
-        .btn-success{ background:var(--success); color:#1df700; border:none; }
-        .btn-danger{ background:var(--danger); color:#e50a0a; border:none; }
-        .btn-ghost{ background:#fff; }
+        
+        .btn-success{ 
+            background:var(--success); 
+            color:#fff; 
+            border:none; 
+        }
+        .btn-success:hover {
+            background-color: #15803d;
+        }
 
+        .btn-danger{ 
+            background:var(--danger); 
+            color:#fff; 
+            border:none; 
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-ghost{ 
+            background:#fff; 
+            color:var(--text);
+        }
+        .btn-ghost:hover {
+            background-color: #f5f5f5;
+        }
+        
         .card{
             background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
             box-shadow:var(--shadow); padding:18px; margin-bottom:14px;
@@ -104,23 +126,6 @@
         }
     </style>
     
-    <div class="header">
-        <div class="title-wrap">
-            <span class="badge-count">
-                {% if usuarios %} {{ usuarios|length }} usuário(s) {% else %} 0 usuários {% endif %}
-            </span>
-        </div>
-    </div>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-container">
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
 
     <div class="card">
         <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:space-between;">

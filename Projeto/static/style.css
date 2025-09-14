@@ -181,3 +181,32 @@ body {
 
 /* O estilo para a nova cor de status */
 .status-Concluída { background-color: #10b981; }
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #1e3a8a;
+}
+
+.btn-action.btn-edit {
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    background-color: #3b82f6; /* Ou a cor que você preferir */
+}
+
+.btn-action.btn-edit:hover {
+    background-color: #2563eb;
+}
