@@ -1126,7 +1126,7 @@ def test_email_route():
     MAIL_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
 
     # --- Coloque seu e-mail pessoal aqui para receber o teste ---
-    RECIPIENT_EMAIL = 'seu-email-de-teste@exemplo.com'
+    RECIPIENT_EMAIL = 'diogodbm9@gmail.com'
     # -----------------------------------------------------------
 
     output = []
@@ -1177,3 +1177,4 @@ def test_email_route():
 if __name__ == '__main__':
 
     app.run(debug=True)
+
